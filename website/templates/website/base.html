@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'website/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -26,7 +26,7 @@
                     <div class="logo-wrapper">
                         <a href="{% url 'website:home' %}" class="logo">
                             <div class="logo-image">
-                                <img src="{% static 'website/img/DE_logo.png' %}" alt="Diaspora Enterprise Logo" width="50" height="50">
+                                <img src="{% static 'images/DE_logo.png' %}" alt="Diaspora Enterprise Logo" width="50" height="50">
                             </div>
                             <span class="logo-text">Diaspora Enterprise</span>
                         </a>
@@ -69,7 +69,7 @@
                 <div class="footer-section">
                     <div class="footer-logo">
                         <div class="logo-image">
-                            <img src="{% static 'website/img/DE_logo.png' %}" alt="Diaspora Enterprise Logo" width="40" height="40">
+                            <img src="{% static 'images/DE_logo.png' %}" alt="Diaspora Enterprise Logo" width="40" height="40">
                         </div>
                         <span class="footer-logo-text">Diaspora Enterprise</span>
                     </div>
@@ -102,7 +102,7 @@
     </footer>
 
     <!-- JavaScript -->
-    <script src="{% static 'website/js/main.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
