@@ -805,6 +805,12 @@ ul {
 
     .hero-buttons {
         flex-direction: column;
+        align-items: center;
+    }
+
+    .mission-buttons {
+        flex-direction: column;
+        align-items: center;
     }
 
     .btn {
