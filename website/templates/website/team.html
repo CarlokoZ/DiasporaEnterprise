@@ -1,0 +1,41 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block title %}Our Team - Diaspora Enterprise{% endblock %}
+
+{% block content %}
+<!-- Team Hero Section -->
+<section class="team-hero">
+    <div class="container">
+        <div class="team-hero-content">
+            <h1 class="page-title">Our Team</h1>
+            <p class="page-subtitle">Meet the visionary leaders driving Diaspora Enterprise forward</p>
+        </div>
+    </div>
+</section>
+
+<!-- Team Members Section -->
+<section class="team-section">
+    <div class="container">
+        <div class="team-grid">
+            {% for member in team_members %}
+            <div class="team-card">
+                <div class="team-avatar">
+                    <div class="avatar-circle">
+                        <span class="avatar-initials">{{ member.initials }}</span>
+                    </div>
+                </div>
+                <div class="team-info">
+                    <h3 class="team-name">{{ member.name }}</h3>
+                    <p class="team-title">{{ member.title }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="team-cta">
+            <a href="{% url 'website:home' %}" class="btn btn-primary">Back to Home</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

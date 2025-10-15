@@ -1,0 +1,97 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block title %}Our Story - Diaspora Enterprise{% endblock %}
+
+{% block content %}
+<!-- Story Hero Section -->
+<section class="story-hero">
+    <div class="container">
+        <div class="story-hero-content">
+            <h1 class="page-title">Our Story</h1>
+            <p class="page-subtitle">The journey behind Diaspora Enterprise</p>
+        </div>
+    </div>
+</section>
+
+<!-- Story Content Section -->
+<section class="story-section">
+    <div class="container">
+        <!-- Origin Story -->
+        <div class="story-content-wrapper">
+            <div class="story-content-card">
+                <div class="story-icon">
+                    <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                        <path d="M30 10L10 22.5V45H22.5V33H37.5V45H50V22.5L30 10Z" fill="url(#storyGradient)"/>
+                        <defs>
+                            <linearGradient id="storyGradient" x1="10" y1="10" x2="50" y2="50" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#2BA0D8"/>
+                                <stop offset="1" stop-color="#1565C0"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h2 class="story-heading">Our Beginning</h2>
+                <p class="story-text">
+                    Founded in 2024, Diaspora Enterprise emerged from a shared vision of creating value in
+                    the real estate market while offering unique accommodation options for travelers. Our
+                    diverse team brings together expertise in real estate, finance, hospitality, and technology.
+                </p>
+            </div>
+        </div>
+
+        <!-- What We Do Section -->
+        <div class="what-we-do-section">
+            <h2 class="section-title">What We Do</h2>
+            <div class="title-underline"></div>
+
+            <div class="services-list">
+                <div class="service-item">
+                    <div class="service-number">01</div>
+                    <div class="service-content">
+                        <h3 class="service-heading">Strategic Property Acquisition</h3>
+                        <p class="service-text">Identify and acquire promising real estate properties</p>
+                    </div>
+                </div>
+
+                <div class="service-item">
+                    <div class="service-number">02</div>
+                    <div class="service-content">
+                        <h3 class="service-heading">Property Optimization</h3>
+                        <p class="service-text">Renovate and optimize properties for short-term rentals</p>
+                    </div>
+                </div>
+
+                <div class="service-item">
+                    <div class="service-number">03</div>
+                    <div class="service-content">
+                        <h3 class="service-heading">Professional Management</h3>
+                        <p class="service-text">Manage and market our properties on platforms like Airbnb</p>
+                    </div>
+                </div>
+
+                <div class="service-item">
+                    <div class="service-number">04</div>
+                    <div class="service-content">
+                        <h3 class="service-heading">Exceptional Guest Experiences</h3>
+                        <p class="service-text">Provide exceptional guest experiences</p>
+                    </div>
+                </div>
+
+                <div class="service-item">
+                    <div class="service-number">05</div>
+                    <div class="service-content">
+                        <h3 class="service-heading">Long-Term Equity Building</h3>
+                        <p class="service-text">Build long-term equity through strategic real estate investments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="story-cta">
+            <a href="{% url 'website:home' %}" class="btn btn-primary">Back to Home</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
