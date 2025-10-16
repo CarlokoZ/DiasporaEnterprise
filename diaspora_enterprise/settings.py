@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -132,3 +133,35 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ========================================
+# Email Configuration (Microsoft 365 OAuth2)
+# ========================================
+
+# OPTION 1: OAuth2 Email Backend (Recommended - Modern & Secure)
+# Uses OAuth2 authentication with Microsoft 365 via Azure App Registration
+EMAIL_BACKEND = 'website.email_backend.OAuth2EmailBackend'
+
+# Microsoft 365 OAuth2 Credentials (from Azure App Registration)
+# IMPORTANT: Do NOT hardcode these values! Use environment variables.
+# Get these from Azure Portal > App Registrations > Your App
+MICROSOFT_CLIENT_ID = os.environ.get('MICROSOFT_CLIENT_ID', '')
+MICROSOFT_CLIENT_SECRET = os.environ.get('MICROSOFT_CLIENT_SECRET', '')
+MICROSOFT_TENANT_ID = os.environ.get('MICROSOFT_TENANT_ID', '')
+
+# OPTION 2: Traditional SMTP with App Password (Legacy)
+# Uncomment these lines to use traditional SMTP authentication instead of OAuth2
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST_USER = 'admin@diasporaenterprise.com'
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
+
+# Common Email Settings (used by both backends)
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'admin@diasporaenterprise.com'
+ADMIN_EMAIL = 'admin@diasporaenterprise.com'
+
+# For development/testing: Use console backend to see emails in terminal
+# Uncomment the line below to print emails to console instead of sending them
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
