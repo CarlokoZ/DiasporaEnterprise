@@ -19,6 +19,7 @@ Security:
 
 import base64
 import logging
+import smtplib
 import threading
 from smtplib import SMTPAuthenticationError, SMTPException
 from typing import Optional
@@ -42,9 +43,31 @@ class OAuth2EmailBackend(EmailBackend):
     _token_cache = {}
     _token_lock = threading.Lock()
 
-    def __init__(self, *args, **kwargs):
-        """Initialize the OAuth2 email backend."""
-        super().__init__(*args, **kwargs)
+    def __init__(self, host=None, port=None, username=None, password=None,
+                 use_tls=None, fail_silently=False, use_ssl=None, timeout=None,
+                 ssl_keyfile=None, ssl_certfile=None, **kwargs):
+        """
+        Initialize the OAuth2 email backend.
+
+        IMPORTANT: We must call super().__init__() with all parameters to ensure
+        Django's SMTP backend is properly initialized with all required attributes.
+        """
+        # Call parent __init__ to properly initialize all SMTP attributes
+        # This sets up: host, port, username, password, use_tls, use_ssl,
+        # timeout, ssl_keyfile, ssl_certfile, ssl_keyfile_password_kwargs, etc.
+        super().__init__(
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            use_tls=use_tls,
+            fail_silently=fail_silently,
+            use_ssl=use_ssl,
+            timeout=timeout,
+            ssl_keyfile=ssl_keyfile,
+            ssl_certfile=ssl_certfile,
+            **kwargs
+        )
 
         # Get OAuth2 credentials from settings
         self.client_id = getattr(settings, 'MICROSOFT_CLIENT_ID', '')
@@ -140,6 +163,9 @@ class OAuth2EmailBackend(EmailBackend):
                         f"Details: {error_description}"
                     )
 
+            except SMTPAuthenticationError:
+                # Re-raise authentication errors
+                raise
             except Exception as e:
                 logger.error(f"Exception during OAuth2 token acquisition: {str(e)}")
                 raise SMTPAuthenticationError(
@@ -172,74 +198,104 @@ class OAuth2EmailBackend(EmailBackend):
         OAuth2 authentication instead of username/password.
 
         Returns:
-            bool: True if connection successful, False otherwise
+            bool: True if connection opened, False if already open
         """
         if self.connection:
             # Already have an open connection
             return False
 
         try:
-            # Create SMTP connection (parent class handles this)
-            self.connection = self.connection_class(
-                self.host,
-                self.port,
-                **self.ssl_keyfile_password_kwargs
-            )
+            # Create SMTP connection
+            connection_params = {
+                'timeout': self.timeout,
+                'local_hostname': None,
+            }
 
-            # Set debug level if configured
-            if self.use_ssl:
-                self.connection.ehlo()
+            try:
+                if self.use_ssl:
+                    # Use SMTP_SSL for SSL connections
+                    self.connection = smtplib.SMTP_SSL(
+                        self.host,
+                        self.port,
+                        **connection_params
+                    )
+                else:
+                    # Use regular SMTP
+                    self.connection = smtplib.SMTP(
+                        self.host,
+                        self.port,
+                        **connection_params
+                    )
+            except Exception as e:
+                logger.error(f"Failed to connect to SMTP server: {str(e)}")
+                raise
 
-            # Start TLS if required
-            if self.use_tls:
-                self.connection.ehlo()
-                self.connection.starttls(**self.ssl_keyfile_password_kwargs)
+            # Send EHLO
+            self.connection.ehlo()
+
+            # Start TLS if required (and not already using SSL)
+            if self.use_tls and not self.use_ssl:
+                self.connection.starttls()
                 self.connection.ehlo()
 
             # Authenticate using OAuth2
-            if self.username and self.password:
-                # Use traditional authentication if username/password provided
-                self.connection.login(self.username, self.password)
-                logger.info("Authenticated using username/password")
-            else:
-                # Use OAuth2 authentication
-                logger.info("Authenticating using OAuth2...")
+            logger.info("Authenticating using OAuth2...")
 
-                # Get access token
-                access_token = self.get_access_token()
+            # Get access token
+            access_token = self.get_access_token()
 
-                # Generate OAuth2 auth string
-                user_email = getattr(settings, 'EMAIL_HOST_USER', settings.DEFAULT_FROM_EMAIL)
-                oauth2_string = self.generate_oauth2_string(user_email, access_token)
+            # Get the email address to authenticate as
+            # Use EMAIL_HOST_USER from settings, or fall back to DEFAULT_FROM_EMAIL
+            user_email = getattr(settings, 'EMAIL_HOST_USER', None)
+            if not user_email:
+                user_email = settings.DEFAULT_FROM_EMAIL
 
-                # Authenticate using XOAUTH2
-                # Note: smtplib's auth method expects the mechanism name and auth data
-                self.connection.ehlo()
+            # Generate OAuth2 auth string
+            oauth2_string = self.generate_oauth2_string(user_email, access_token)
 
-                # Use the SMTP AUTH command with XOAUTH2
-                code, response = self.connection.docmd(
-                    "AUTH XOAUTH2",
-                    oauth2_string
+            # Authenticate using XOAUTH2
+            self.connection.ehlo()
+
+            # Use the SMTP AUTH command with XOAUTH2
+            # The AUTH XOAUTH2 command expects the base64-encoded auth string
+            code, response = self.connection.docmd(
+                "AUTH XOAUTH2",
+                oauth2_string
+            )
+
+            if code != 235:  # 235 = Authentication successful
+                error_msg = response.decode() if isinstance(response, bytes) else str(response)
+                logger.error(f"OAuth2 authentication failed with code {code}: {error_msg}")
+                raise SMTPAuthenticationError(
+                    code,
+                    f"OAuth2 authentication failed: {error_msg}"
                 )
 
-                if code != 235:  # 235 = Authentication successful
-                    raise SMTPAuthenticationError(
-                        code,
-                        f"OAuth2 authentication failed: {response.decode() if isinstance(response, bytes) else response}"
-                    )
-
-                logger.info("OAuth2 authentication successful")
-
+            logger.info("OAuth2 authentication successful")
             return True
 
         except SMTPException as e:
             logger.error(f"SMTP error during connection: {str(e)}")
+            # Close any partial connection
+            if self.connection:
+                try:
+                    self.connection.quit()
+                except:
+                    pass
+                self.connection = None
             if not self.fail_silently:
                 raise
             return False
 
         except Exception as e:
             logger.error(f"Unexpected error during SMTP connection: {str(e)}")
+            # Close any partial connection
+            if self.connection:
+                try:
+                    self.connection.quit()
+                except:
+                    pass
+                self.connection = None
             if not self.fail_silently:
                 raise
             return False
